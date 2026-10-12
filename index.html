@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnamese Driving Theory Simulator</title>
+    <style>
+        :root {
+            --bg: #f4efe3;
+            --panel: rgba(255, 252, 246, 0.94);
+            --panel-strong: #fffdf9;
+            --ink: #1f2a2f;
+            --muted: #5f6c70;
+            --line: rgba(31, 42, 47, 0.12);
+            --accent: #0d6c63;
+            --accent-2: #f28c28;
+            --accent-3: #b33c2f;
+            --shadow: 0 24px 60px rgba(31, 42, 47, 0.12);
+            --radius-lg: 28px;
+            --radius-md: 18px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(13, 108, 99, 0.14), transparent 30%),
+                radial-gradient(circle at top right, rgba(242, 140, 40, 0.18), transparent 28%),
+                linear-gradient(180deg, #f7f2e8 0%, #ede2cf 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.25;
+        }
+
+        .app-shell {
+            position: relative;
+            max-width: 1220px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 24px;
+        }
+
+        .hero-card,
+        .stats-card,
+        .control-card,
+        .workspace {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-card {
+            overflow: hidden;
+            position: relative;
+            padding: 30px;
+        }
+
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            top: -60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(242, 140, 40, 0.24), transparent 70%);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(13, 108, 99, 0.1);
+            color: var(--accent);
+            font-size: 0.86rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: "Georgia", "Times New Roman", serif;
+            margin: 0;
+        }
+
+        h1 {
+            margin-top: 18px;
+            font-size: clamp(2.1rem, 4vw, 3.8rem);
+            line-height: 1.04;
+            max-width: 12ch;
+        }
+
+        .hero-copy {
+            margin: 14px 0 0;
+            max-width: 62ch;
+            line-height: 1.65;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .hero-note {
+            margin-top: 20px;
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(13, 108, 99, 0.15);
+            color: var(--ink);
+            font-size: 0.95rem;
+        }
+
+        .stats-card {
+            padding: 24px;
+            display: grid;
+            gap: 16px;
+            align-content: start;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .stat {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            background: var(--panel-strong);
+            border: 1px solid var(--line);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            margin-top: 6px;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .status-banner {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.96rem;
+            line-height: 1.5;
+            border: 1px solid transparent;
+        }
+
+        .status-ready {
+            background: rgba(13, 108, 99, 0.1);
+            color: #0b5d55;
+            border-color: rgba(13, 108, 99, 0.14);
+        }
+
+        .status-warning {
+            background: rgba(242, 140, 40, 0.14);
+            color: #8f510d;
+            border-color: rgba(242, 140, 40, 0.18);
+        }
+
+        .status-error {
+            background: rgba(179, 60, 47, 0.1);
+            color: #8b271d;
+            border-color: rgba(179, 60, 47, 0.18);
+        }
+
+        .control-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+            gap: 18px;
+            align-items: center;
+            padding: 20px 22px;
+            margin-bottom: 24px;
+        }
+
+        .mode-switch {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .mode-button,
+        .ghost-button,
+        .primary-button {
+            border: 0;
+            border-radius: 999px;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
+        }
+
+        .mode-button {
+            padding: 12px 18px;
+            background: rgba(31, 42, 47, 0.06);
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        .mode-button:hover,
+        .ghost-button:hover,
+        .primary-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .mode-button.is-active {
+            background: linear-gradient(135deg, var(--accent), #138a7e);
+            color: white;
+            box-shadow: 0 12px 24px rgba(13, 108, 99, 0.22);
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 10px 14px;
+            align-items: center;
+        }
+
+        .toolbar.is-hidden {
+            display: none;
+        }
+        .toolbar.is-vocab .toggle { display: none; }
+
+        .toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--line);
+            font-size: 0.92rem;
+            white-space: nowrap;
+        }
+
+        .toggle input {
+            accent-color: var(--accent);
+        }
+
+        .workspace {
+            padding: 24px;
+        }
+
+        .panel {
+            display: none;
+            animation: rise 220ms ease;
+        }
+
+        .panel.is-active {
+            display: block;
+        }
+
+        .panel-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .panel-copy p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            max-width: 58ch;
+            line-height: 1.55;
+        }
+
+        .panel-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .primary-button,
+        .ghost-button,
+        select,
+        input[type="number"] {
+            min-height: 46px;
+        }
+
+        .primary-button {
+            padding: 0 18px;
+            background: linear-gradient(135deg, var(--accent-2), #d96d18);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 12px 22px rgba(242, 140, 40, 0.24);
+        }
+
+        .ghost-button {
+            padding: 0 16px;
+            background: white;
+            border: 1px solid var(--line);
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+            transform: none;
+            box-shadow: none;
+        }
+
+        select,
+        input[type="number"] {
+            width: min(100%, 260px);
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: white;
+            color: var(--ink);
+            font: inherit;
+        }
+
+        .field-label {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .question-card {
+            display: grid;
+            gap: 18px;
+            padding: 24px;
+            border-radius: calc(var(--radius-lg) - 8px);
+            background: var(--panel-strong);
+            border: 1px solid var(--line);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .question-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(13, 108, 99, 0.09);
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .meta-chip.alt {
+            background: rgba(242, 140, 40, 0.14);
+            color: #8f510d;
+        }
+
+        .meta-chip.soft {
+            background: rgba(31, 42, 47, 0.06);
+            color: var(--muted);
+        }
+
+        .question-title {
+            font-size: clamp(1.35rem, 2vw, 2rem);
+            line-height: 1.25;
+        }
+
+        .question-subtitle {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .question-figure {
+            margin: 0;
+            min-width: 0;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, #ffffff, #efe8d9);
+        }
+
+        .question-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .question-figure img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 480px;
+            object-fit: contain;
+        }
+
+        .question-figure figcaption { padding: 10px 14px; }
+
+        .question-figure .source-line {
+            color: #374151;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            align-items: start;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(31, 42, 47, 0.08);
+            background: #fffdfa;
+        }
+
+        .option-letter {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: rgba(31, 42, 47, 0.07);
+            font-weight: 800;
+        }
+
+        .option.is-correct {
+            border-color: rgba(179, 60, 47, 0.18);
+            background: rgba(179, 60, 47, 0.07);
+        }
+
+        .option.is-correct .option-letter {
+            background: var(--accent-3);
+            color: white;
+        }
+
+        .option-english {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .answer-note,
+        .empty-state,
+        .inline-note {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            line-height: 1.55;
+        }
+
+        .vocab-shell {
+            display: grid;
+            gap: 18px;
+        }
+
+        .vocab-scoreboard {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .vocab-stat {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .vocab-stat-label {
+            color: var(--muted);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .vocab-stat-value {
+            margin-top: 6px;
+            font-size: 1.55rem;
+            font-weight: 800;
+        }
+
+        .vocab-card {
+            display: grid;
+            gap: 18px;
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(13, 108, 99, 0.14);
+            background:
+                radial-gradient(circle at top right, rgba(242, 140, 40, 0.15), transparent 30%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 234, 0.98));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .vocab-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .vocab-prompt-wrap {
+            display: grid;
+            gap: 8px;
+        }
+
+        .vocab-label {
+            font-size: 0.88rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700;
+        }
+
+        .vocab-prompt {
+            font-size: clamp(1.75rem, 3.1vw, 2.8rem);
+            line-height: 1.15;
+            font-family: "Georgia", "Times New Roman", serif;
+        }
+
+        .vocab-helper {
+            color: var(--muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .vocab-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .vocab-input {
+            width: 100%;
+            min-height: 54px;
+            padding: 0 16px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: white;
+            color: var(--ink);
+            font: inherit;
+            font-size: 1rem;
+        }
+
+        .vocab-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .vocab-feedback {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            line-height: 1.6;
+        }
+
+        .vocab-feedback.is-success {
+            background: rgba(13, 108, 99, 0.1);
+            border-color: rgba(13, 108, 99, 0.14);
+            color: #0b5d55;
+        }
+
+        .vocab-feedback.is-error {
+            background: rgba(179, 60, 47, 0.09);
+            border-color: rgba(179, 60, 47, 0.16);
+            color: #8b271d;
+        }
+
+        .vocab-feedback.is-info {
+            background: rgba(242, 140, 40, 0.12);
+            border-color: rgba(242, 140, 40, 0.18);
+            color: #8f510d;
+        }
+
+        .answer-note {
+            background: rgba(179, 60, 47, 0.08);
+            border: 1px solid rgba(179, 60, 47, 0.12);
+            color: #7f261f;
+        }
+
+        .empty-state {
+            background: rgba(31, 42, 47, 0.05);
+            border: 1px dashed rgba(31, 42, 47, 0.16);
+            color: var(--muted);
+        }
+
+        .inline-note {
+            background: rgba(242, 140, 40, 0.1);
+            border: 1px solid rgba(242, 140, 40, 0.18);
+            color: #8f510d;
+            font-size: 0.92rem;
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 960px) {
+            .hero,
+            .control-card {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .app-shell {
+                padding: 18px 14px 36px;
+            }
+
+            .hero-card,
+            .stats-card,
+            .control-card,
+            .workspace,
+            .question-card {
+                padding: 18px;
+            }
+
+            .panel-head {
+                align-items: flex-start;
+            }
+
+            .panel-actions,
+            .mode-switch {
+                width: 100%;
+            }
+
+            .panel-actions > *,
+            .mode-switch > * {
+                width: 100%;
+            }
+
+            select,
+            input[type="number"],
+            .vocab-input,
+            .primary-button,
+            .ghost-button,
+            .mode-button {
+                width: 100%;
+            }
+
+            .vocab-scoreboard {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Eight cinematic themes share one accessible document order. */
+        :root {
+            --bg: #f2b84a; --panel: #fff7df; --panel-strong: #fffdf5;
+            --ink: #142341; --muted: #47546a; --line: #142341;
+            --accent: #1645a7; --accent-2: #e6412c; --accent-3: #d73225;
+            --soft: #f5ddb1; --success: #1d684a; --danger: #a32320;
+            --shadow: 9px 9px 0 #142341; --radius-lg: 5px; --radius-md: 5px; --radius-sm: 4px;
+            --head-font: "Arial Black", Impact, "Segoe UI", sans-serif;
+            --body-font: "Trebuchet MS", "Segoe UI", sans-serif;
+            --button-radius: 4px; --hero-columns: 1.5fr .65fr;
+        }
+        body { font-family: var(--body-font); background: var(--bg); color: var(--ink); }
+        body::before { opacity: .12; background-image: linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px); background-size: 46px 46px; }
+        .app-shell { max-width: 1380px; padding-top: 28px; }
+        .hero { grid-template-columns: var(--hero-columns); gap: 18px; }
+        .hero-card,.stats-card,.control-card,.workspace { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); backdrop-filter: none; }
+        .hero-card { min-height: 300px; padding: clamp(24px,4vw,58px); isolation: isolate; }
+        .hero-card::after { content: "↗"; width: auto; height: auto; right: 35px; top: 13px; background: none; color: var(--accent-2); font: 180px/1 var(--head-font); opacity: .35; transform: rotate(-12deg); z-index: -1; }
+        .eyebrow { background: var(--accent); color: #fff; border-radius: 2px; font: 800 .78rem var(--body-font); letter-spacing: .13em; }
+        .signal-dot { width: 9px; height: 9px; border-radius: 50%; background: #f7cf58; box-shadow: 0 0 0 3px #ffffff44; }
+        h1,h2,h3 { font-family: var(--head-font); letter-spacing: -.035em; }
+        h1 { max-width: 14ch; font-size: clamp(3rem,6.1vw,6.6rem); line-height: .93; text-transform: uppercase; }
+        h1 em { color: var(--accent-2); font-style: normal; }
+        .hero-copy { max-width: 53ch; font-size: 1.05rem; color: var(--muted); }
+        .hero-note { background: var(--soft); color: var(--ink); border: 2px solid var(--line); border-radius: var(--radius-sm); }
+        .stats-card { gap: 14px; }
+        .stats-grid { grid-template-columns: repeat(2,1fr); }
+        .stat,.vocab-stat { background: var(--panel-strong); border: 2px solid var(--line); border-radius: var(--radius-md); }
+        .stat-value { color: var(--accent); font-family: var(--head-font); }
+        .status-banner { border-radius: var(--radius-sm); }
+        .status-ready { background: var(--soft); color: var(--ink); border-color: var(--line); }
+        .status-warning { background: var(--soft); color: var(--ink); border-color: var(--line); }
+        .status-error { background: #fff0e9; color: var(--danger); border-color: var(--danger); }
+        .control-card { grid-template-columns: 1fr auto; gap: 20px; }
+        .mode-switch { gap: 6px; }
+        .mode-button,.ghost-button,.primary-button { border-radius: var(--button-radius); }
+        .mode-button { background: var(--soft); color: var(--ink); border: 2px solid var(--line); }
+        .mode-button.is-active { background: var(--accent); color: #fff; box-shadow: 4px 4px 0 var(--line); }
+        .primary-button { background: var(--accent-2); color: #fff; box-shadow: 4px 4px 0 var(--line); border: 2px solid var(--line); }
+        .ghost-button { background: var(--panel-strong); border: 2px solid var(--line); color: var(--ink); }
+        .toggle { border: 2px solid var(--line); border-radius: var(--button-radius); background: var(--panel-strong); }
+        .toggle input { accent-color: var(--accent); }
+        select,input[type="number"],.vocab-input { background: var(--panel-strong); color: var(--ink); border: 2px solid var(--line); border-radius: var(--button-radius); }
+        .theme-field select { min-width: 205px; }
+        .practice-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 18px; padding: 14px 20px; background: var(--accent); border: 2px solid var(--line); border-radius: var(--radius-md); color: #fff; box-shadow: 5px 5px 0 var(--line); }
+        .practice-bar > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 18px; }
+        .practice-kicker { font: 800 .7rem var(--body-font); letter-spacing: .15em; }
+        #practice-score { font: 800 1.2rem var(--head-font); }
+        #practice-detail { font-size: .82rem; opacity: .9; }
+        .practice-actions { display: flex; gap: 8px; }
+        .practice-actions .ghost-button { min-height: 37px; }
+        .workspace { padding: clamp(18px,2.5vw,36px); }
+        .panel-head { border-bottom: 2px solid var(--line); padding-bottom: 20px; }
+        .panel-copy h2 { font-size: clamp(1.6rem,2.5vw,2.7rem); text-transform: uppercase; }
+        .question-card { background: var(--panel-strong); border: 2px solid var(--line); border-radius: var(--radius-md); box-shadow: none; padding: clamp(18px,2.5vw,36px); gap: 24px; }
+        .meta-chip { background: var(--accent); color: #fff; border-radius: var(--button-radius); }
+        .meta-chip.alt { background: var(--accent-2); color: #fff; }
+        .meta-chip.soft { background: var(--soft); color: var(--ink); }
+        .question-title { max-width: 45ch; font-size: clamp(1.6rem,2.7vw,2.8rem); }
+        .question-subtitle { max-width: 65ch; }
+        .question-figure { max-width: 700px; background: #fff; border: 2px solid var(--line); border-radius: var(--radius-sm); }
+        .options { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+        .option { width: 100%; text-align: left; color: var(--ink); font: inherit; cursor: pointer; border: 2px solid var(--line); border-radius: var(--button-radius); background: var(--panel); min-height: 82px; transition: transform .15s, box-shadow .15s; }
+        .option:not(:disabled):hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--line); }
+        .option.is-selected { background: var(--soft); box-shadow: inset 5px 0 0 var(--accent); }
+        .option.is-correct { border-color: var(--success); background: #e0f4e3; color: #102b1f; }
+        .option.is-incorrect { border-color: var(--danger); background: #ffe4dd; color: #591914; }
+        .option.is-correct .option-letter { background: var(--success); color: white; }
+        .option.is-incorrect .option-letter { background: var(--danger); color: white; }
+        .option-letter { background: var(--ink); color: #fff; border-radius: var(--button-radius); flex: none; }
+        .question-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .answer-note { background: var(--soft); border: 2px solid var(--line); border-radius: var(--radius-sm); color: var(--ink); }
+        .answer-note.is-right { background: #e0f4e3; border-color: var(--success); color: #102b1f; }
+        .answer-note.is-wrong { background: #ffe4dd; border-color: var(--danger); color: #591914; }
+        .source-line { font-size: .85rem; color: var(--muted); }
+        .vocab-card { background: var(--panel-strong); border: 2px solid var(--line); border-radius: var(--radius-md); box-shadow: none; }
+        .vocab-prompt { font-family: var(--head-font); }
+        .vocab-feedback { border-radius: var(--radius-sm); }
+        .vocab-feedback.is-success { color: var(--success); }
+        .vocab-feedback.is-error { color: var(--danger); }
+        .inline-note,.empty-state { background: var(--soft); color: var(--ink); border: 2px dashed var(--line); border-radius: var(--radius-sm); }
+        :focus-visible { outline: 4px solid var(--accent-2); outline-offset: 3px; }
+
+        /* Cinematic collection: glass controls over eight illustrated worlds. */
+        .cinematic-theme {
+            --bg:#211923; --panel:#241e2dc9; --panel-strong:#171720dd;
+            --ink:#fff8f7; --muted:#d2c3d1; --line:#ffffff30;
+            --accent:#ad86d3; --accent-2:#ff8467; --soft:#ffffff12;
+            --success:#68e0bc; --danger:#ff9c9c; --action-ink:#211720;
+            --shadow:0 24px 70px #08081080; --radius-lg:26px; --radius-md:20px;
+            --radius-sm:14px; --button-radius:15px;
+            --body-font:"Segoe UI",Arial,sans-serif; --head-font:"Segoe UI",Arial,sans-serif;
+            --question-main:1.48fr;
+            --scene-shade:linear-gradient(90deg,#0b0d1a38 0 17%,#0b0d1abc 34%,#0b0d1ac9 100%);
+            --rail-width:clamp(220px,16vw,280px);
+            background-color:var(--bg);
+            background-image:var(--scene-shade),var(--scene-image);
+            background-size:cover;
+            background-position:center;
+            background-repeat:no-repeat;
+            background-attachment:fixed;
+            color:var(--ink);
+        }
+        .cinematic-theme::before { background:radial-gradient(circle at 18% 22%,#fff8 0 1px,transparent 2px),radial-gradient(circle at 75% 42%,#fff6 0 1px,transparent 2px),linear-gradient(90deg,transparent 0 84%,#ffffff0b 84.1% 84.2%,transparent 84.3%); background-size:109px 107px,151px 139px,100% 100%; opacity:.32; z-index:0; }
+        .cinematic-theme::after { content:""; position:fixed; inset:0 auto 0 0; width:var(--rail-width); height:100vh; background-image:var(--rail-image,var(--scene-image)); background-size:auto 100%; background-position:left center; background-repeat:no-repeat; opacity:1; clip-path:none; box-shadow:22px 0 60px #080c17a8; pointer-events:none; z-index:0; }
+        .cinematic-theme .app-shell { z-index:1; max-width:none; margin-left:var(--rail-width); margin-right:0; padding:16px 30px 56px 18px; display:flex; flex-direction:column; }
+        .cinematic-theme .control-card { order:-1; grid-template-columns:minmax(0,1fr) auto; padding:10px 14px; align-items:center; margin-bottom:26px; }
+        .cinematic-theme .hero { grid-template-columns:minmax(0,1fr) minmax(340px,.85fr); gap:16px; margin-bottom:18px; }
+        .cinematic-theme .hero-card,.cinematic-theme .stats-card,.cinematic-theme .control-card,.cinematic-theme .workspace { background:var(--panel); border:1px solid var(--line); box-shadow:var(--shadow),inset 0 1px 0 #ffffff20; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+        .cinematic-theme .hero-card { min-height:190px; padding:26px 34px; }
+        .cinematic-theme .hero-card::after { content:""; width:180px; height:180px; right:20px; top:0; border:1px solid #ffffff36; border-radius:50%; background:radial-gradient(circle at 30% 33%,#fff6,transparent 45%),var(--accent-2); opacity:.42; box-shadow:0 0 65px var(--accent-2); transform:none; }
+        .cinematic-theme .eyebrow { background:#ffffff16; color:var(--accent-2); border:1px solid var(--line); border-radius:100px; letter-spacing:.11em; }
+        .cinematic-theme .signal-dot { background:var(--success); box-shadow:0 0 13px var(--success); }
+        .cinematic-theme h1,.cinematic-theme h2,.cinematic-theme h3 { font-family:var(--head-font); letter-spacing:-.045em; text-transform:none; }
+        .cinematic-theme h1 { font-size:clamp(2.25rem,3.6vw,4.1rem); line-height:1.04; max-width:18ch; margin-top:14px; }
+        .cinematic-theme h1 em { color:var(--accent-2); }
+        .cinematic-theme .hero-copy { color:var(--muted); max-width:66ch; margin-top:9px; font-size:.96rem; }
+        .cinematic-theme .hero-note { display:flex; gap:12px; background:#ffffff0e; border:1px solid var(--line); color:var(--muted); margin-top:16px; padding:10px 14px; }
+        .cinematic-theme .hero-note strong { color:var(--ink); white-space:nowrap; }
+        .cinematic-theme .stats-card { padding:22px; }
+        .cinematic-theme .stats-card h2 { font-size:1.12rem; }
+        .cinematic-theme .stats-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+        .cinematic-theme .stat,.cinematic-theme .vocab-stat { min-width:0; padding:12px; border:1px solid var(--line); border-radius:var(--radius-sm); background:#ffffff0c; }
+        .cinematic-theme .stat-value { color:var(--accent-2); font-size:1.55rem; }
+        .cinematic-theme .stat-label { font-size:.72rem; }
+        .cinematic-theme .status-ready,.cinematic-theme .status-warning { background:#ffffff12; color:var(--muted); border-color:var(--line); }
+        .cinematic-theme .status-error { background:#7b273c99; color:#fff; border-color:var(--danger); }
+        .cinematic-theme .mode-switch { flex-wrap:wrap; gap:4px; }
+        .cinematic-theme .mode-button { border:1px solid transparent; background:transparent; color:var(--muted); border-radius:var(--button-radius); min-height:42px; }
+        .cinematic-theme .mode-button.is-active { background:#ffffff16; color:var(--accent-2); box-shadow:inset 0 -2px 0 var(--accent-2); border-color:var(--line); }
+        .cinematic-theme .mode-button:not(.is-active):hover { background:#ffffff14; color:var(--ink); }
+        .cinematic-theme .toolbar { gap:9px; }
+        .cinematic-theme .toggle,.cinematic-theme select,.cinematic-theme input[type="number"],.cinematic-theme .vocab-input { border:1px solid var(--line); border-radius:var(--button-radius); background:#100f18a8; color:var(--ink); }
+        .cinematic-theme select option,.cinematic-theme select optgroup { background:#242033; color:#fff; }
+        .cinematic-theme .field-label { color:var(--muted); }
+        .cinematic-theme .practice-bar { background:linear-gradient(105deg,#ffffff17,#ffffff09); border:1px solid var(--line); border-radius:var(--radius-md); box-shadow:var(--shadow); }
+        .cinematic-theme .practice-kicker { color:var(--accent-2); }
+        .cinematic-theme .workspace { padding:22px; }
+        .cinematic-theme .panel-head { border-color:var(--line); }
+        .cinematic-theme .panel-copy h2 { text-transform:none; font-size:clamp(1.45rem,2vw,2.1rem); }
+        .cinematic-theme .panel-copy p { color:var(--muted); }
+        .cinematic-theme .question-card { background:transparent; border:0; padding:6px 0 0; box-shadow:none; gap:16px; }
+        .cinematic-theme .question-meta { gap:6px; }
+        .cinematic-theme .meta-chip { background:#ffffff13; border:1px solid var(--line); color:var(--muted); font-size:.79rem; padding:6px 10px; border-radius:100px; }
+        .cinematic-theme .meta-chip:first-child { color:var(--accent-2); }
+        .cinematic-theme .meta-chip.alt { background:#ffad7030; color:#ffd3a9; }
+        .cinematic-theme .meta-chip.soft { background:#ffffff0c; color:var(--muted); }
+        .cinematic-theme .question-title { max-width:55ch; font-size:clamp(1.55rem,2.25vw,2.5rem); line-height:1.32; }
+        .cinematic-theme .question-subtitle,.cinematic-theme .source-line { color:var(--muted); }
+        .cinematic-theme .question-figure { background:#ffffffed; border:1px solid var(--line); }
+        .cinematic-theme .question-figure .source-line { color:#374151; }
+        .cinematic-theme .options { grid-template-columns:1fr; gap:9px; }
+        .cinematic-theme .option { min-height:68px; background:#ffffff0c; border:1px solid var(--line); color:var(--ink); border-radius:var(--radius-sm); transition:background .15s,border-color .15s,transform .15s; }
+        .cinematic-theme .option:not(:disabled):hover { background:#ffffff1a; border-color:var(--accent-2); transform:translateY(-1px); box-shadow:none; }
+        .cinematic-theme .option.is-selected { background:color-mix(in srgb,var(--accent-2) 22%,transparent); border-color:var(--accent-2); box-shadow:inset 0 0 0 1px var(--accent-2),0 0 24px color-mix(in srgb,var(--accent-2) 20%,transparent); }
+        .cinematic-theme .option.is-correct { background:#113d38d9; border-color:var(--success); color:#f1fff9; }
+        .cinematic-theme .option.is-incorrect { background:#542331d9; border-color:var(--danger); color:#fff6f6; }
+        .cinematic-theme .option-letter { border:1px solid #ffffff5a; border-radius:50%; background:#ffffff10; color:var(--ink); }
+        .cinematic-theme .option.is-selected .option-letter { background:var(--accent-2); color:var(--action-ink); border-color:var(--accent-2); }
+        .cinematic-theme .option.is-correct .option-letter { background:var(--success); color:#102b28; border-color:var(--success); }
+        .cinematic-theme .option.is-incorrect .option-letter { background:var(--danger); color:#31141b; border-color:var(--danger); }
+        .cinematic-theme .primary-button { background:var(--accent-2); color:var(--action-ink); border:1px solid var(--accent-2); border-radius:var(--button-radius); box-shadow:0 7px 25px color-mix(in srgb,var(--accent-2) 24%,transparent); font-weight:800; }
+        .cinematic-theme .ghost-button { background:#ffffff0b; color:var(--ink); border:1px solid var(--line); border-radius:var(--button-radius); box-shadow:none; }
+        .cinematic-theme .ghost-button:hover { background:#ffffff20; }
+        .cinematic-theme .answer-note,.cinematic-theme .inline-note,.cinematic-theme .empty-state { border:1px solid var(--line); background:#ffffff0f; color:var(--ink); border-radius:var(--radius-sm); }
+        .cinematic-theme .answer-note.is-right { border-color:var(--success); background:#17483e; color:#eafff7; }
+        .cinematic-theme .answer-note.is-wrong { border-color:var(--danger); background:#5a2a36; color:#fff; }
+        .cinematic-theme .vocab-card { background:#ffffff0b; border:1px solid var(--line); box-shadow:none; }
+        .cinematic-theme .vocab-feedback.is-success { color:var(--success); }
+        .cinematic-theme .vocab-feedback.is-error { color:var(--danger); }
+        .cinematic-theme .vocab-feedback.is-info { color:var(--ink); }
+        .cinematic-theme :focus-visible { outline:3px solid var(--accent-2); outline-offset:3px; }
+
+        body[data-theme="twilight"] {
+            --panel:#18141fd9; --panel-strong:#13111ae6; --line:#ffab8a59;
+            --scene-image:url("./assets/twilight-terrace-background.png");
+            --rail-image:url("./assets/twilight-terrace-reference.png");
+            --scene-shade:linear-gradient(90deg,#120d1826 0 17%,#120d18b8 34%,#120d18ad 100%);
+        }
+        body[data-theme="twilight"]::before { background:linear-gradient(180deg,#100b14b8 0,#100b1430 38%,#100b147d 100%); opacity:1; }
+        body[data-theme="twilight"] .control-card { background:#100d16ec; border-color:#ffffff20; border-radius:0 0 18px 18px; }
+        body[data-theme="twilight"] .hero-card { background:linear-gradient(120deg,#17131edb,#2d1d2ec7); border-color:#ff987263; }
+        body[data-theme="twilight"] .hero-card::after { display:none; }
+        body[data-theme="twilight"] .stats-card { background:linear-gradient(118deg,#181421dc,#51303ac4); border-color:#ffad8663; }
+        body[data-theme="twilight"] .workspace { background:linear-gradient(135deg,#13111bea,#211723e3); border-color:#ff9d7766; }
+        body[data-theme="twilight"] .option.is-selected { background:linear-gradient(90deg,#ff825545,#b8493840); }
+
+        body[data-theme="lantern"] { --bg:#101b2d; --panel:#142235d9; --panel-strong:#132030dd; --ink:#fff5de; --muted:#d7c4bd; --line:#ffbc7750; --accent:#cf6c58; --accent-2:#f9ae66; --success:#82e8bf; --action-ink:#2f1a1e; --radius-lg:15px; --radius-md:12px; --radius-sm:9px; --button-radius:9px; --scene:radial-gradient(ellipse at 17% 42%,#bc403c66,transparent 28%),radial-gradient(ellipse at 80% 28%,#ef9b6077,transparent 30%),linear-gradient(120deg,#0b1426,#24203a 54%,#4c2839); --horizon:#081322; --question-main:1.35fr; }
+        body[data-theme="lantern"]::before { background-image:radial-gradient(ellipse at center,#ffc67f99 0 16px,#b1464a55 17px 29px,transparent 30px),radial-gradient(circle,#ffe7a6 0 1px,transparent 2px); background-size:320px 260px,49px 58px; background-position:12px 45px,0 0; opacity:.23; }
+        body[data-theme="lantern"] .hero-card::after { border-radius:15% 15% 46% 46%; width:120px; height:155px; right:45px; top:20px; }
+        body[data-theme="lantern"] .option-letter { border-radius:8px; }
+
+        body[data-theme="ocean"] { --bg:#071726; --panel:#092439ce; --panel-strong:#0a263bcf; --ink:#eefaff; --muted:#bdd7e0; --line:#a3dfe755; --accent:#8fd8df; --accent-2:#8de8e8; --success:#80e6bf; --action-ink:#082e3b; --radius-lg:32px; --radius-md:24px; --radius-sm:18px; --button-radius:100px; --scene:radial-gradient(ellipse at 72% 19%,#7bc8d966,transparent 24%),radial-gradient(ellipse at 15% 90%,#07688588,transparent 48%),linear-gradient(130deg,#04101e,#092a43 60%,#174665); --horizon:#041827; --question-main:1.75fr; }
+        body[data-theme="ocean"]::before { background:repeating-radial-gradient(circle at 78% 24%,transparent 0 45px,#b3f2f426 47px 48px,transparent 50px 91px); opacity:.8; }
+        body[data-theme="ocean"] .hero-card::after { background:radial-gradient(circle at 32% 32%,#ffffffa8,#45b5d9 52%,#093550 80%); box-shadow:0 0 80px #8be7ed99; }
+        body[data-theme="ocean"] .option { border-left:3px solid #a4dce37b; }
+
+        body[data-theme="jade"] { --bg:#102c2b; --panel:#173a36cc; --panel-strong:#183f3bcf; --ink:#f4ffed; --muted:#c4ddd0; --line:#ccf3c44f; --accent:#ace2aa; --accent-2:#c6eeaa; --success:#8ff3bc; --action-ink:#173423; --radius-lg:36px; --radius-md:30px; --radius-sm:22px; --button-radius:100px; --scene:radial-gradient(ellipse at 84% 68%,#96ce8199,transparent 33%),radial-gradient(ellipse at 7% 17%,#3c8c7777,transparent 43%),linear-gradient(125deg,#0b1f25,#1e4c43 65%,#456748); --horizon:#0b2622; --question-main:1.3fr; }
+        body[data-theme="jade"]::before { background:radial-gradient(ellipse at 18% 18%,#d3f9b755 0 8%,transparent 8.4%),radial-gradient(ellipse at 92% 11%,#d3f9b74d 0 12%,transparent 12.5%),repeating-linear-gradient(132deg,transparent 0 84px,#d8f8c91a 86px 88px); opacity:.72; }
+        body[data-theme="jade"] .hero-card::after { width:210px; height:145px; border-radius:5% 90% 8% 90%; transform:rotate(-27deg); background:linear-gradient(130deg,#d5f7b4bb,#326d60); }
+        body[data-theme="jade"] .option-letter { border-radius:18px 5px 18px 5px; }
+
+        body[data-theme="desert"] { --bg:#2d1c25; --panel:#39262fcc; --panel-strong:#402b32d5; --ink:#fff4e7; --muted:#e1c9bd; --line:#ffe0ad55; --accent:#e8a884; --accent-2:#ffd08c; --success:#a8e4bc; --action-ink:#43241e; --radius-lg:8px 38px 8px 38px; --radius-md:7px 28px 7px 28px; --radius-sm:5px 18px 5px 18px; --button-radius:5px 16px 5px 16px; --scene:radial-gradient(ellipse at 82% 64%,#ffbb7777,transparent 28%),radial-gradient(ellipse at 23% 80%,#c76e6577,transparent 38%),linear-gradient(125deg,#211823,#533039 66%,#93604e); --horizon:#2c1b28; --question-main:1.55fr; }
+        body[data-theme="desert"]::before { background:repeating-linear-gradient(0deg,transparent 0 43px,#fff0d319 44px 45px),radial-gradient(circle at 85% 68%,#ffe2ab99 0 9%,transparent 9.2%); opacity:.55; }
+        body[data-theme="desert"] .hero-card::after { width:145px; height:145px; background:#ffcf93; box-shadow:0 0 90px #ffad74; }
+
+        body[data-theme="aurora"] { --bg:#101328; --panel:#242240c9; --panel-strong:#252344d5; --ink:#f7f3ff; --muted:#d1cce7; --line:#c3b7f455; --accent:#8b90ed; --accent-2:#b9f6d4; --success:#9cf7c5; --action-ink:#1b2d32; --radius-lg:36px; --radius-md:25px; --radius-sm:20px; --button-radius:24px; --scene:radial-gradient(ellipse at 75% 20%,#93dcb299,transparent 29%),radial-gradient(ellipse at 17% 49%,#816dd9a6,transparent 37%),linear-gradient(130deg,#0d142c,#30335c 58%,#246968); --horizon:#0c1427; --question-main:1.48fr; }
+        body[data-theme="aurora"]::before { background:conic-gradient(from 218deg at 45% -25%,transparent 0deg,#85e9bc55 20deg,transparent 48deg,#b49efa55 83deg,transparent 112deg),radial-gradient(circle,#ffffffa8 1px,transparent 2px); background-size:100% 100%,97px 101px; opacity:.63; }
+        body[data-theme="aurora"] .hero-card::after { background:radial-gradient(circle,#b6f9dabb,#7a87d996 60%,transparent 72%); border:0; box-shadow:0 0 100px #87efd188; }
+        body[data-theme="aurora"] .option.is-selected { box-shadow:0 0 30px #b6f7cf3d; }
+
+        body[data-theme="rainy"] { --bg:#101b31; --panel:#182840db; --panel-strong:#1b3049dd; --ink:#f3f8ff; --muted:#c1d0e1; --line:#9bc9fa55; --accent:#7fa9ec; --accent-2:#93c8ff; --success:#85ebc9; --action-ink:#12263a; --radius-lg:13px; --radius-md:10px; --radius-sm:7px; --button-radius:7px; --scene:radial-gradient(ellipse at 88% 71%,#e6898790,transparent 22%),radial-gradient(ellipse at 17% 80%,#3c8bd199,transparent 35%),linear-gradient(120deg,#0b1428,#203453 57%,#4c4055); --horizon:#101f35; --question-main:1.7fr; }
+        body[data-theme="rainy"]::before { background:repeating-linear-gradient(105deg,transparent 0 27px,#afd9fc44 28px 29px,transparent 30px 74px); opacity:.46; }
+        body[data-theme="rainy"] .hero-card::after { width:170px; height:170px; background:radial-gradient(circle,#ffc8a0 4%,#ef8e8955 48%,transparent 70%); border:0; box-shadow:0 0 90px #ea8b7a66; }
+        body[data-theme="rainy"] .option { border-left:3px solid var(--accent-2); }
+
+        body[data-theme="lunar"] { --bg:#15152c; --panel:#24233ccd; --panel-strong:#272641d5; --ink:#f7f6ff; --muted:#d2d1e5; --line:#cac7f05c; --accent:#b6abd9; --accent-2:#e8d9fd; --success:#9be7cf; --action-ink:#25213a; --radius-lg:42px; --radius-md:32px; --radius-sm:24px; --button-radius:100px; --head-font:Georgia,"Times New Roman",serif; --scene:radial-gradient(circle at 84% 24%,#e5dcf499 0 8%,#ded5fa33 10%,transparent 27%),radial-gradient(ellipse at 13% 82%,#686292a1,transparent 35%),linear-gradient(130deg,#0f1126,#262443 67%,#454164); --horizon:#121226; --question-main:1.3fr; }
+        body[data-theme="lunar"]::before { background:radial-gradient(circle,#fff 0 1px,transparent 2px),repeating-radial-gradient(circle at 83% 24%,transparent 0 54px,#ddd9ff22 55px 56px,transparent 57px 100px); background-size:113px 107px,100% 100%; opacity:.51; }
+        body[data-theme="lunar"] .hero-card::after { background:radial-gradient(circle at 35% 30%,#fff,#d8d3f1 62%,#9c9ac5); box-shadow:0 0 100px #e4dcff9c; }
+        body[data-theme="lunar"] h1 { font-weight:400; letter-spacing:-.065em; }
+
+        body[data-theme="lantern"] { --scene-image:url("./assets/lantern-alley-background.png"); }
+        body[data-theme="ocean"] { --scene-image:url("./assets/ocean-observatory-background.png"); }
+        body[data-theme="jade"] { --scene-image:url("./assets/jade-conservatory-background.png"); }
+        body[data-theme="desert"] { --scene-image:url("./assets/desert-signal-background.png"); }
+        body[data-theme="aurora"] { --scene-image:url("./assets/aurora-station-background.png"); }
+        body[data-theme="rainy"] { --scene-image:url("./assets/rainy-metro-background.png"); }
+        body[data-theme="lunar"] { --scene-image:url("./assets/lunar-study-background.png"); }
+
+        @media (max-width:1150px) { .cinematic-theme .control-card { grid-template-columns:1fr; } .cinematic-theme .toolbar { justify-content:flex-start; } .cinematic-theme .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .cinematic-theme .app-shell { margin-left:0; padding-left:20px; padding-right:20px; } .cinematic-theme::after { display:none; } }
+        @media (max-width:640px) { .cinematic-theme .app-shell { padding-top:10px; } .cinematic-theme .control-card { padding:12px; } .cinematic-theme .mode-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; } .cinematic-theme .mode-button { padding:9px 5px; font-size:.84rem; } .cinematic-theme .hero-card { padding:24px 20px; } .cinematic-theme .hero-card::after { width:105px; height:105px; right:5px; top:4px; } .cinematic-theme .hero-note { display:block; } .cinematic-theme .stats-card { padding:18px; } .cinematic-theme .workspace { padding:15px; } .cinematic-theme .question-card { padding:2px 0; } .cinematic-theme .question-title { font-size:1.5rem; } }
+
+        @media (max-width:960px) { .hero,.control-card { grid-template-columns:1fr; } .toolbar { justify-content:flex-start; } }
+        @media (max-width:640px) { .app-shell { padding:16px 12px 40px; } .hero-card { min-height:0; } .stats-grid { grid-template-columns:repeat(2,1fr); } .practice-bar { align-items:stretch; flex-direction:column; } .practice-actions { flex-wrap:wrap; } .options { grid-template-columns:1fr; } .hero-card::after { font-size:100px !important; right:5px; top:5px; } .theme-field,.theme-field select { width:100%; } }
+        @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+    </style>
+    <script src="./questions-data.js" defer></script>
+    <script src="./driving-vocab.js" defer></script>
+</head>
+<body>
+    <div class="app-shell">
+        <section class="hero">
+            <div class="hero-card">
+                <div class="eyebrow"><span class="signal-dot" aria-hidden="true"></span> FULL BANK / DAILY SIGNAL</div>
+                <h1>Find your way<br><em>forward.</em></h1>
+                <p class="hero-copy">
+                    A friendlier place to learn Vietnamese driving theory. Study the question bank, test your recall, and build a vocabulary rhythm at your own pace.
+                </p>
+                <div class="hero-note">
+                    <strong>Today’s look</strong>
+                    <span id="theme-description">A fresh visual direction each day.</span>
+                </div>
+            </div>
+
+            <aside class="stats-card">
+                <h2>On your dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">Questions Loaded</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Categories</div>
+                        <div class="stat-value" id="stat-categories">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Questions With Images</div>
+                        <div class="stat-value" id="stat-images">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Vocabulary Terms</div>
+                        <div class="stat-value" id="stat-vocab">0</div>
+                    </div>
+                </div>
+                <div id="status-banner" class="status-banner status-warning" role="status" aria-live="polite">Loading bundled questions...</div>
+            </aside>
+        </section>
+
+        <section class="control-card">
+            <div class="mode-switch" role="group" aria-label="Study modes">
+                <button type="button" class="mode-button is-active" data-mode="single">Single Question</button>
+                <button type="button" class="mode-button" data-mode="themed">Themed Set</button>
+                <button type="button" class="mode-button" data-mode="random">Random Mix</button>
+                <button type="button" class="mode-button" data-mode="vocab">Vocabulary Drill</button>
+            </div>
+
+            <div class="toolbar" id="question-toolbar">
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-vietnamese" checked>
+                    <span>Vietnamese</span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-english">
+                    <span>English</span>
+                </label>
+                <label class="field-label theme-field"><span>Daily design</span><select id="theme-select" aria-label="Daily design"><option value="auto">Auto · changes daily</option><optgroup label="Cinematic collection"><option value="twilight">Twilight Terrace</option><option value="lantern">Lantern Alley</option><option value="ocean">Ocean Observatory</option><option value="jade">Jade Conservatory</option><option value="desert">Desert Signal</option><option value="aurora">Aurora Station</option><option value="rainy">Rainy Metro</option><option value="lunar">Lunar Study</option></optgroup></select></label>
+            </div>
+        </section>
+
+        <div class="practice-bar" id="practice-bar" aria-live="polite">
+            <div><span class="practice-kicker">PRACTICE MEMORY</span><strong id="practice-score">0 correct · 0 attempted</strong><span id="practice-detail">Your checked answers are saved on this device.</span></div>
+            <div class="practice-actions"><button type="button" class="ghost-button" id="review-wrong">Review missed <span id="missed-count">0</span></button><button type="button" class="ghost-button" id="reset-practice">Reset practice</button></div>
+        </div>
+
+        <main class="workspace">
+            <section id="panel-single" class="panel is-active">
+                <div class="panel-head">
+                    <div class="panel-copy">
+                        <h2>Single Question</h2>
+                        <p>Step through the full bank one by one and keep the answer hidden until you want to check yourself.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <button type="button" class="ghost-button" id="single-prev">Previous</button>
+                        <button type="button" class="ghost-button" id="single-next">Next</button>
+                    </div>
+                </div>
+                <div id="single-content"></div>
+            </section>
+
+            <section id="panel-themed" class="panel">
+                <div class="panel-head">
+                    <div class="panel-copy">
+                        <h2>Themed Set</h2>
+                        <p>Filter the question bank by chapter so you can focus on one topic at a time.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <label class="field-label">
+                            <span>Category</span>
+                            <select id="category-select"></select>
+                        </label>
+                        <button type="button" class="primary-button" id="themed-start">Load Category</button>
+                        <button type="button" class="ghost-button" id="themed-prev">Previous</button>
+                        <button type="button" class="ghost-button" id="themed-next">Next</button>
+                    </div>
+                </div>
+                <div id="themed-content"></div>
+            </section>
+
+            <section id="panel-random" class="panel">
+                <div class="panel-head">
+                    <div class="panel-copy">
+                        <h2>Random Mix</h2>
+                        <p>Generate a fresh study set from across the bank whenever you want a new practice run.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <label class="field-label">
+                            <span>Question Count</span>
+                            <input type="number" id="random-count" min="1" max="600" value="20">
+                        </label>
+                        <button type="button" class="primary-button" id="random-start">Build Mix</button>
+                        <button type="button" class="ghost-button" id="random-prev">Previous</button>
+                        <button type="button" class="ghost-button" id="random-next">Next</button>
+                    </div>
+                </div>
+                <div id="random-content"></div>
+            </section>
+
+            <section id="panel-vocab" class="panel">
+                <div class="panel-head">
+                    <div class="panel-copy">
+                        <h2>Vocabulary Drill</h2>
+                        <p>Practice core driving-test words and phrases in both directions. Type the translation, check your answer, then move to the next card.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <label class="field-label">
+                            <span>Category</span>
+                            <select id="vocab-category-select"></select>
+                        </label>
+                        <label class="field-label">
+                            <span>Direction</span>
+                            <select id="vocab-direction-select">
+                                <option value="vi-en">Vietnamese -> English</option>
+                                <option value="en-vi">English -> Vietnamese</option>
+                            </select>
+                        </label>
+                        <button type="button" class="primary-button" id="vocab-shuffle">Shuffle Deck</button>
+                    </div>
+                </div>
+                <div id="vocab-content"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const state = {
+            questions: [],
+            vocabulary: [],
+            mode: "single",
+            currentIndex: 0,
+            themedQuestions: [],
+            themedIndex: 0,
+            randomQuestions: [],
+            randomIndex: 0,
+            vocabCategory: "All Terms",
+            vocabDirection: "vi-en",
+            vocabDeck: [],
+            vocabIndex: 0,
+            vocabCorrect: 0,
+            vocabAttempts: 0,
+            vocabStreak: 0,
+            vocabBestStreak: 0,
+            vocabLocked: false,
+            vocabFeedback: null,
+            savedVocabSession: null,
+            hasEnglish: false,
+            themePreference: "auto",
+            answers: {},
+            reveals: {},
+            reviewWrong: false,
+        };
+
+        // Question IDs were reassigned when the source changed from the
+        // 249-question A1 subset to the official 600-question bank. Keep
+        // progress in a new namespace so old answers cannot attach to the
+        // wrong questions; only harmless display preferences are migrated.
+        const STORAGE_KEY = "vdt-simulator-v3-full600";
+        const LEGACY_STORAGE_KEY = "vdt-simulator-v2";
+        const THEMES = ["twilight", "lantern", "ocean", "jade", "desert", "aurora", "rainy", "lunar"];
+        const CINEMATIC_THEMES = new Set(THEMES);
+        const THEME_DESCRIPTIONS = {
+            twilight: "Twilight Terrace · coral light over a warm city at dusk.",
+            lantern: "Lantern Alley · amber lanterns and lacquered midnight blue.",
+            ocean: "Ocean Observatory · deep water, glass instruments, and silver light.",
+            jade: "Jade Conservatory · botanical shadows and luminous green glass.",
+            desert: "Desert Signal · sun-warmed sandstone and midnight observatory glass.",
+            aurora: "Aurora Station · northern lights over a quiet violet sky.",
+            rainy: "Rainy Metro · electric blue reflections after dark.",
+            lunar: "Lunar Study · moonlit indigo and a calm celestial glow.",
+        };
+
+        const elements = {};
+
+        document.addEventListener("DOMContentLoaded", init);
+
+        async function init() {
+            cacheElements();
+            restoreState();
+            bindEvents();
+            applyTheme();
+            scheduleThemeRefresh();
+
+            const loadedQuestions = await loadQuestions();
+            state.questions = normalizeQuestions(loadedQuestions);
+            state.vocabulary = normalizeVocabulary(window.__DRIVING_VOCAB__ || []);
+            state.hasEnglish = state.questions.some(questionHasEnglish);
+
+            configureLanguageControls();
+            updateStats();
+            populateCategories();
+            populateVocabularyCategories();
+            restoreRandomSet();
+            state.currentIndex = clamp(state.currentIndex, 0, Math.max(0, state.questions.length - 1));
+            setMode(state.mode);
+            renderAll();
+
+            if (state.questions.length && state.vocabulary.length) {
+                setStatus(
+                    `Loaded ${state.questions.length} questions and ${state.vocabulary.length} vocabulary terms from local bundles.`,
+                    "ready"
+                );
+            } else if (state.questions.length) {
+                setStatus(
+                    `Loaded ${state.questions.length} questions, but the vocabulary bundle is missing or empty.`,
+                    "warning"
+                );
+            } else {
+                setStatus(
+                    "No questions were loaded. Make sure `questions-data.js` is beside this HTML file, or rerun `python extract_questions.py`.",
+                    "error"
+                );
+            }
+        }
+
+        function cacheElements() {
+            elements.status = document.getElementById("status-banner");
+            elements.statTotal = document.getElementById("stat-total");
+            elements.statCategories = document.getElementById("stat-categories");
+            elements.statImages = document.getElementById("stat-images");
+            elements.statVocab = document.getElementById("stat-vocab");
+            elements.modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+            elements.toolbar = document.getElementById("question-toolbar");
+            elements.panels = {
+                single: document.getElementById("panel-single"),
+                themed: document.getElementById("panel-themed"),
+                random: document.getElementById("panel-random"),
+                vocab: document.getElementById("panel-vocab"),
+            };
+            elements.singleContent = document.getElementById("single-content");
+            elements.themedContent = document.getElementById("themed-content");
+            elements.randomContent = document.getElementById("random-content");
+            elements.vocabContent = document.getElementById("vocab-content");
+            elements.categorySelect = document.getElementById("category-select");
+            elements.randomCount = document.getElementById("random-count");
+            elements.vocabCategorySelect = document.getElementById("vocab-category-select");
+            elements.vocabDirectionSelect = document.getElementById("vocab-direction-select");
+            elements.toggleVietnamese = document.getElementById("toggle-vietnamese");
+            elements.toggleEnglish = document.getElementById("toggle-english");
+            elements.themeSelect = document.getElementById("theme-select");
+            elements.themeDescription = document.getElementById("theme-description");
+            elements.practiceScore = document.getElementById("practice-score");
+            elements.practiceDetail = document.getElementById("practice-detail");
+            elements.missedCount = document.getElementById("missed-count");
+            elements.reviewWrong = document.getElementById("review-wrong");
+            elements.resetPractice = document.getElementById("reset-practice");
+            elements.singlePrev = document.getElementById("single-prev");
+            elements.singleNext = document.getElementById("single-next");
+            elements.themedStart = document.getElementById("themed-start");
+            elements.themedPrev = document.getElementById("themed-prev");
+            elements.themedNext = document.getElementById("themed-next");
+            elements.randomStart = document.getElementById("random-start");
+            elements.randomPrev = document.getElementById("random-prev");
+            elements.randomNext = document.getElementById("random-next");
+            elements.vocabShuffle = document.getElementById("vocab-shuffle");
+        }
+
+        function bindEvents() {
+            elements.modeButtons.forEach((button) => {
+                button.addEventListener("click", () => setMode(button.dataset.mode));
+            });
+
+            elements.toggleVietnamese.addEventListener("change", handleLanguageToggle);
+            elements.toggleEnglish.addEventListener("change", handleLanguageToggle);
+            elements.themeSelect.addEventListener("change", () => {
+                state.themePreference = elements.themeSelect.value;
+                applyTheme();
+                saveState();
+            });
+            elements.reviewWrong.addEventListener("click", () => {
+                state.reviewWrong = !state.reviewWrong;
+                if (state.reviewWrong) {
+                    Object.keys(state.answers).filter((key) => key.startsWith("review:")).forEach((key) => delete state.answers[key]);
+                    Object.keys(state.reveals).filter((key) => key.startsWith("review:")).forEach((key) => delete state.reveals[key]);
+                }
+                state.currentIndex = 0;
+                setMode("single");
+                saveState();
+            });
+            elements.resetPractice.addEventListener("click", () => {
+                if (!window.confirm("Clear your saved question answers and score on this device?")) return;
+                state.answers = {};
+                state.reveals = {};
+                state.reviewWrong = false;
+                state.currentIndex = 0;
+                saveState();
+                renderAll();
+            });
+            [["single", elements.singleContent], ["themed", elements.themedContent], ["random", elements.randomContent]].forEach(([mode, container]) => {
+                container.addEventListener("click", (event) => handleQuestionAction(event, mode));
+            });
+
+            elements.categorySelect.addEventListener("change", () => {
+                buildThemedSet();
+                saveState();
+                if (state.mode === "themed") {
+                    renderQuestionMode("themed");
+                }
+            });
+
+            elements.randomCount.addEventListener("change", () => { buildRandomSet(); renderQuestionMode("random"); saveState(); });
+            elements.vocabCategorySelect.addEventListener("change", () => {
+                state.vocabCategory = elements.vocabCategorySelect.value;
+                buildVocabularyDeck();
+                renderVocabulary();
+                saveState();
+            });
+            elements.vocabDirectionSelect.addEventListener("change", () => {
+                state.vocabDirection = elements.vocabDirectionSelect.value;
+                buildVocabularyDeck();
+                renderVocabulary();
+                saveState();
+            });
+            elements.vocabShuffle.addEventListener("click", () => {
+                buildVocabularyDeck();
+                renderVocabulary();
+                saveState();
+            });
+
+            elements.singlePrev.addEventListener("click", () => moveIndex("single", -1));
+            elements.singleNext.addEventListener("click", () => moveIndex("single", 1));
+            elements.themedStart.addEventListener("click", () => {
+                buildThemedSet();
+                renderQuestionMode("themed");
+                saveState();
+            });
+            elements.themedPrev.addEventListener("click", () => moveIndex("themed", -1));
+            elements.themedNext.addEventListener("click", () => moveIndex("themed", 1));
+            elements.randomStart.addEventListener("click", () => {
+                buildRandomSet();
+                renderQuestionMode("random");
+                saveState();
+            });
+            elements.randomPrev.addEventListener("click", () => moveIndex("random", -1));
+            elements.randomNext.addEventListener("click", () => moveIndex("random", 1));
+        }
+
+        async function loadQuestions() {
+            if (Array.isArray(window.__QUESTIONS__) && window.__QUESTIONS__.length) {
+                return window.__QUESTIONS__;
+            }
+
+            try {
+                const response = await fetch("./questions.json");
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                setStatus(
+                    "The fallback fetch for `questions.json` failed. This usually happens when the page is opened directly from disk, so the bundled `questions-data.js` file is required.",
+                    "warning"
+                );
+                return [];
+            }
+        }
+
+        function normalizeQuestions(input) {
+            if (!Array.isArray(input)) {
+                return [];
+            }
+
+            return input
+                .filter((question) => question && Array.isArray(question.options))
+                .map((question) => ({
+                    id: Number.isFinite(question.id) ? question.id : 0,
+                    number: Number.isFinite(question.number) ? question.number : 0,
+                    printed_number: Number.isFinite(question.printed_number) ? question.printed_number : question.number,
+                    page: Number.isFinite(question.page) ? question.page : null,
+                    category: squashWhitespace(question.category || "General"),
+                    category_english: squashWhitespace(question.category_english || ""),
+                    vietnamese: squashWhitespace(question.vietnamese || ""),
+                    english: squashWhitespace(question.english || ""),
+                    answer: Number.isInteger(question.answer) ? question.answer : null,
+                    images: [...new Set([
+                        ...(Array.isArray(question.images) ? question.images : []),
+                        question.image,
+                    ].filter((image) => typeof image === "string" && image.trim()).map((image) => image.trim()))],
+                    image: typeof question.image === "string" ? question.image : null,
+                    critical: question.critical === true,
+                    options: question.options.map((option, index) => ({
+                        index: Number.isInteger(option.index) ? option.index : index,
+                        vietnamese: squashWhitespace(option.vietnamese || ""),
+                        english: squashWhitespace(option.english || ""),
+                    })),
+                }));
+        }
+
+        function normalizeVocabulary(input) {
+            if (!Array.isArray(input)) {
+                return [];
+            }
+
+            return input
+                .filter((entry) => entry && entry.vietnamese && entry.english)
+                .map((entry) => ({
+                    category: squashWhitespace(entry.category || "Vocabulary"),
+                    vietnamese: squashWhitespace(entry.vietnamese || ""),
+                    english: squashWhitespace(entry.english || ""),
+                    englishAlternatives: normalizeTextArray(entry.englishAlternatives || []),
+                    vietnameseAlternatives: normalizeTextArray(entry.vietnameseAlternatives || []),
+                }))
+                .map((entry, index) => ({
+                    ...entry,
+                    key: JSON.stringify([index, entry.category, entry.vietnamese, entry.english]),
+                }));
+        }
+
+        function normalizeTextArray(values) {
+            if (!Array.isArray(values)) {
+                return [];
+            }
+            return values.map((value) => squashWhitespace(value)).filter(Boolean);
+        }
+
+        function configureLanguageControls() {
+            elements.toggleVietnamese.checked = state.showVietnamese !== false;
+            elements.toggleEnglish.checked = state.showEnglish === true && state.hasEnglish;
+            if (!elements.toggleVietnamese.checked && !elements.toggleEnglish.checked) elements.toggleVietnamese.checked = true;
+            if (!state.hasEnglish) {
+                elements.toggleEnglish.checked = false;
+                elements.toggleEnglish.closest(".toggle").title = "English translations are not included in this dataset yet.";
+            }
+        }
+
+        function updateStats() {
+            const categories = new Set(state.questions.map((question) => question.category).filter(Boolean));
+            const imageCount = state.questions.filter((question) => question.images.length).length;
+
+            elements.statTotal.textContent = String(state.questions.length);
+            elements.statCategories.textContent = String(categories.size);
+            elements.statImages.textContent = String(imageCount);
+            elements.statVocab.textContent = String(state.vocabulary.length);
+            const maxCount = Math.max(1, state.questions.length);
+            elements.randomCount.max = String(maxCount);
+            elements.randomCount.value = String(clamp(parseInt(elements.randomCount.value, 10) || 20, 1, maxCount));
+        }
+
+        function populateCategories() {
+            const categories = [...new Set(state.questions.map((question) => question.category).filter(Boolean))];
+            const previous = elements.categorySelect.value || state.selectedCategory;
+            const previousIndex = state.themedIndex;
+            elements.categorySelect.innerHTML = "";
+
+            if (!categories.length) {
+                const option = document.createElement("option");
+                option.value = "General";
+                option.textContent = "General";
+                elements.categorySelect.appendChild(option);
+            } else {
+                categories.forEach((category) => {
+                    const option = document.createElement("option");
+                    option.value = category;
+                    const translated = state.questions.find((question) => question.category === category && question.category_english)?.category_english || "";
+                    option.textContent = languageLabel(category, translated);
+                    elements.categorySelect.appendChild(option);
+                });
+            }
+
+            if (categories.includes(previous)) elements.categorySelect.value = previous;
+
+            buildThemedSet();
+            state.themedIndex = clamp(previousIndex, 0, Math.max(0, state.themedQuestions.length - 1));
+        }
+
+        function populateVocabularyCategories() {
+            const categories = ["All Terms", ...new Set(state.vocabulary.map((entry) => entry.category).filter(Boolean))];
+            elements.vocabCategorySelect.innerHTML = "";
+
+            categories.forEach((category) => {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                elements.vocabCategorySelect.appendChild(option);
+            });
+
+            if (!categories.includes(state.vocabCategory)) state.vocabCategory = "All Terms";
+            elements.vocabCategorySelect.value = state.vocabCategory;
+            elements.vocabDirectionSelect.value = state.vocabDirection;
+            restoreVocabularyDeck();
+        }
+
+        function buildThemedSet() {
+            const selected = elements.categorySelect.value;
+            state.selectedCategory = selected;
+            state.themedQuestions = state.questions.filter((question) => question.category === selected);
+            state.themedIndex = 0;
+        }
+
+        function buildRandomSet() {
+            const count = clamp(
+                parseInt(elements.randomCount.value, 10) || 20,
+                1,
+                Math.max(1, state.questions.length || 1)
+            );
+
+            elements.randomCount.value = String(count);
+            state.randomQuestions = shuffle([...state.questions]).slice(0, count);
+            state.randomIndex = 0;
+        }
+
+        function restoreRandomSet() {
+            const byId = new Map(state.questions.map((question) => [String(question.id || question.number), question]));
+            const restored = Array.isArray(state.savedRandomIds)
+                ? state.savedRandomIds.map((id) => byId.get(String(id))).filter(Boolean)
+                : [];
+            if (restored.length) {
+                state.randomQuestions = restored;
+                state.randomIndex = clamp(state.randomIndex, 0, restored.length - 1);
+                elements.randomCount.value = String(restored.length);
+            } else {
+                buildRandomSet();
+            }
+        }
+
+        function vocabularySource() {
+            return state.vocabCategory === "All Terms"
+                ? [...state.vocabulary]
+                : state.vocabulary.filter((entry) => entry.category === state.vocabCategory);
+        }
+
+        function buildVocabularyDeck() {
+            state.vocabDeck = shuffle(vocabularySource());
+            state.vocabIndex = 0;
+            state.vocabCorrect = 0;
+            state.vocabAttempts = 0;
+            state.vocabStreak = 0;
+            state.vocabBestStreak = 0;
+            resetVocabularyCardState();
+        }
+
+        function restoreVocabularyDeck() {
+            const saved = state.savedVocabSession;
+            const source = vocabularySource();
+            const byKey = new Map(source.map((entry) => [entry.key, entry]));
+            const keys = saved?.keys;
+            const validKeys = Array.isArray(keys) && keys.length === source.length
+                && new Set(keys).size === source.length
+                && keys.every((key) => typeof key === "string" && byKey.has(key));
+            const validCounters = saved && [saved.index, saved.correct, saved.attempts, saved.streak, saved.bestStreak]
+                .every((value) => Number.isInteger(value) && value >= 0)
+                && (source.length === 0 ? saved.index === 0 : saved.index < source.length)
+                && saved.correct <= saved.attempts
+                && saved.streak <= saved.bestStreak
+                && saved.bestStreak <= saved.correct;
+            const validFeedback = saved && (saved.feedbackKind === null ||
+                ["empty", "correct", "wrong", "revealed"].includes(saved.feedbackKind));
+            const expectedLocked = saved && ["correct", "wrong", "revealed"].includes(saved.feedbackKind);
+
+            if (!saved || saved.category !== state.vocabCategory || saved.direction !== state.vocabDirection
+                || !validKeys || !validCounters || !validFeedback || saved.locked !== expectedLocked) {
+                buildVocabularyDeck();
+                return;
+            }
+
+            state.vocabDeck = keys.map((key) => byKey.get(key));
+            state.vocabIndex = saved.index;
+            state.vocabCorrect = saved.correct;
+            state.vocabAttempts = saved.attempts;
+            state.vocabStreak = saved.streak;
+            state.vocabBestStreak = saved.bestStreak;
+            state.vocabLocked = saved.locked;
+            state.vocabFeedback = vocabularyFeedback(saved.feedbackKind);
+        }
+
+        function resetVocabularyCardState() {
+            state.vocabLocked = false;
+            state.vocabFeedback = null;
+        }
+
+        function setMode(mode) {
+            if (!elements.panels[mode]) mode = "single";
+            state.mode = mode;
+            elements.toolbar.classList.toggle("is-vocab", mode === "vocab");
+
+            elements.modeButtons.forEach((button) => {
+                button.classList.toggle("is-active", button.dataset.mode === mode);
+                button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+            });
+
+            Object.entries(elements.panels).forEach(([panelMode, panel]) => {
+                panel.classList.toggle("is-active", panelMode === mode);
+            });
+
+            renderAll();
+            saveState();
+        }
+
+        function moveIndex(mode, delta) {
+            if (mode === "single") {
+                state.currentIndex = clamp(state.currentIndex + delta, 0, Math.max(0, getQuestionList("single").length - 1));
+                renderSingle();
+                updateNavigationState();
+                saveState();
+                return;
+            }
+
+            if (mode === "themed") {
+                state.themedIndex = clamp(state.themedIndex + delta, 0, Math.max(0, state.themedQuestions.length - 1));
+                renderThemed();
+                updateNavigationState();
+                saveState();
+                return;
+            }
+
+            state.randomIndex = clamp(state.randomIndex + delta, 0, Math.max(0, state.randomQuestions.length - 1));
+            renderRandom();
+            updateNavigationState();
+            saveState();
+        }
+
+        function renderAll() {
+            renderSingle();
+            renderThemed();
+            renderRandom();
+            renderVocabulary();
+            updateNavigationState();
+            updatePracticeScore();
+        }
+
+        function handleLanguageToggle() {
+            if (!elements.toggleVietnamese.checked && !elements.toggleEnglish.checked) {
+                elements.toggleVietnamese.checked = true;
+            }
+            state.showVietnamese = elements.toggleVietnamese.checked;
+            state.showEnglish = elements.toggleEnglish.checked;
+            populateCategories();
+            saveState();
+            renderAll();
+        }
+
+        function renderSingle() {
+            elements.singleContent.innerHTML = renderQuestionView(
+                getQuestionList("single"),
+                state.currentIndex,
+                state.reviewWrong ? "No missed questions yet. Check some answers, then return here." : "Use the navigation buttons to move through the full set.",
+                "single"
+            );
+        }
+
+        function renderThemed() {
+            elements.themedContent.innerHTML = renderQuestionView(
+                state.themedQuestions,
+                state.themedIndex,
+                "Choose a chapter above and load it to practice one topic at a time.",
+                "themed"
+            );
+        }
+
+        function renderRandom() {
+            elements.randomContent.innerHTML = renderQuestionView(
+                state.randomQuestions,
+                state.randomIndex,
+                "Build a new mix whenever you want a different practice session.",
+                "random"
+            );
+        }
+
+        function renderVocabulary() {
+            elements.vocabContent.innerHTML = renderVocabularyView();
+            wireVocabularyCard();
+        }
+
+        function renderQuestionView(list, index, emptyHint, mode) {
+            if (!list.length) {
+                return `<div class="empty-state">${escapeHtml(emptyHint)}</div>`;
+            }
+
+            const question = list[index];
+            if (!question) {
+                return `<div class="empty-state">This question could not be displayed.</div>`;
+            }
+
+            return renderQuestionCard(question, index + 1, list.length, mode);
+        }
+
+        function renderVocabularyView() {
+            if (!state.vocabulary.length) {
+                return `<div class="empty-state">The vocabulary bundle is missing. Make sure <code>driving-vocab.js</code> is beside this HTML file.</div>`;
+            }
+
+            if (!state.vocabDeck.length) {
+                return `<div class="empty-state">No vocabulary terms match the selected category yet.</div>`;
+            }
+
+            const entry = state.vocabDeck[state.vocabIndex];
+            const directionLabel = state.vocabDirection === "vi-en" ? "Translate into English" : "Dịch sang tiếng Việt";
+            const helperText = state.vocabDirection === "vi-en"
+                ? "Type the English meaning. Matching ignores case and punctuation."
+                : "Type the Vietnamese term. Accent marks are optional when you answer.";
+            const promptText = state.vocabDirection === "vi-en" ? entry.vietnamese : entry.english;
+            const placeholder = state.vocabDirection === "vi-en"
+                ? "Type the English translation"
+                : "Type the Vietnamese translation";
+            const feedbackMarkup = state.vocabFeedback
+                ? `<div class="vocab-feedback ${escapeHtml(state.vocabFeedback.type)}" role="status" aria-live="polite">${state.vocabFeedback.message}</div>`
+                : "";
+
+            return `
+                <div class="vocab-shell">
+                    <div class="vocab-scoreboard">
+                        <div class="vocab-stat">
+                            <div class="vocab-stat-label">Deck Size</div>
+                            <div class="vocab-stat-value">${escapeHtml(String(state.vocabDeck.length))}</div>
+                        </div>
+                        <div class="vocab-stat">
+                            <div class="vocab-stat-label">Correct</div>
+                            <div class="vocab-stat-value">${escapeHtml(String(state.vocabCorrect))}</div>
+                        </div>
+                        <div class="vocab-stat">
+                            <div class="vocab-stat-label">Attempts</div>
+                            <div class="vocab-stat-value">${escapeHtml(String(state.vocabAttempts))}</div>
+                        </div>
+                        <div class="vocab-stat">
+                            <div class="vocab-stat-label">Best Streak</div>
+                            <div class="vocab-stat-value">${escapeHtml(String(state.vocabBestStreak))}</div>
+                        </div>
+                    </div>
+
+                    <article class="vocab-card">
+                        <div class="vocab-meta">
+                            <span class="meta-chip">Card ${escapeHtml(String(state.vocabIndex + 1))} of ${escapeHtml(String(state.vocabDeck.length))}</span>
+                            <span class="meta-chip soft">${escapeHtml(entry.category)}</span>
+                            <span class="meta-chip alt">${escapeHtml(state.vocabDirection === "vi-en" ? "Vietnamese -> English" : "English -> Vietnamese")}</span>
+                            <span class="meta-chip soft">Current streak ${escapeHtml(String(state.vocabStreak))}</span>
+                        </div>
+
+                        <div class="vocab-prompt-wrap">
+                            <div class="vocab-label">${escapeHtml(directionLabel)}</div>
+                            <div class="vocab-prompt">${escapeHtml(promptText)}</div>
+                            <p class="vocab-helper">${escapeHtml(helperText)}</p>
+                        </div>
+
+                        <form class="vocab-form" id="vocab-form">
+                            <input
+                                id="vocab-answer"
+                                class="vocab-input"
+                                type="text"
+                                autocomplete="off"
+                                spellcheck="false"
+                                placeholder="${escapeHtml(placeholder)}"
+                                ${state.vocabLocked ? "disabled" : ""}
+                            >
+                            <div class="vocab-actions">
+                                <button type="submit" class="primary-button" id="vocab-check">${state.vocabLocked ? "Next Card" : "Check Answer"}</button>
+                                <button type="button" class="ghost-button" id="vocab-reveal" ${state.vocabLocked ? "disabled" : ""}>Reveal</button>
+                                <button type="button" class="ghost-button" id="vocab-next">Skip / Next</button>
+                            </div>
+                        </form>
+
+                        ${feedbackMarkup}
+                    </article>
+                </div>
+            `;
+        }
+
+        function renderQuestionCard(question, position, total, mode) {
+            const key = answerKey(mode, question);
+            const record = state.answers[key] || {};
+            const revealAnswer = Boolean(record.checked || state.reveals[key]);
+            const showVietnamese = elements.toggleVietnamese.checked;
+            const showEnglish = elements.toggleEnglish.checked;
+            const titleText = pickLanguageText(question.vietnamese, question.english, showVietnamese, showEnglish);
+            const titleSupplement = showVietnamese && showEnglish && question.english ? question.english : "";
+            const categoryText = languageLabel(question.category, question.category_english);
+            const printedBadge = question.printed_number !== question.number
+                ? `<span class="meta-chip alt">Printed as ${escapeHtml(String(question.printed_number))}</span>`
+                : "";
+            const pageBadge = question.page
+                ? `<span class="meta-chip soft">Page ${escapeHtml(String(question.page))}</span>`
+                : "";
+            const imageMarkup = question.images.length
+                ? `<div class="question-images">${question.images.map((image, index) => `<figure class="question-figure"><img src="./images/${encodeURIComponent(image)}" alt="Source illustration ${index + 1} of ${question.images.length} for question ${escapeHtml(String(question.number))}" loading="lazy"><figcaption class="source-line">Source illustration ${index + 1}${question.images.length > 1 ? ` of ${question.images.length}` : ""}; study it with the written question. A detailed description has not been verified.</figcaption></figure>`).join("")}</div>`
+                : "";
+
+            const optionsMarkup = question.options.map((option, index) => {
+                const optionMain = pickLanguageText(option.vietnamese, option.english, showVietnamese, showEnglish);
+                const optionEnglish = showVietnamese && showEnglish && option.english ? `<span class="option-english">${escapeHtml(option.english)}</span>` : "";
+                const correctClass = revealAnswer && index === question.answer ? " is-correct" : "";
+                const incorrectClass = record.checked && record.selected === index && index !== question.answer ? " is-incorrect" : "";
+                const selectedClass = record.selected === index ? " is-selected" : "";
+                return `
+                    <button type="button" class="option${selectedClass}${correctClass}${incorrectClass}" data-option="${index}" aria-pressed="${record.selected === index ? "true" : "false"}" ${revealAnswer ? "disabled" : ""}>
+                        <span class="option-letter" aria-hidden="true">${String.fromCharCode(65 + index)}</span>
+                        <span class="option-body">
+                            <span class="option-main">${escapeHtml(optionMain)}</span>
+                            ${optionEnglish}
+                        </span>
+                    </button>
+                `;
+            }).join("");
+
+            const answerNote = record.checked
+                ? `<div class="answer-note ${record.selected === question.answer ? "is-right" : "is-wrong"}" role="status" aria-live="polite"><strong>${record.selected === question.answer ? "Correct" : "Not quite"}.</strong> The answer key marks option ${String.fromCharCode(65 + question.answer)}.</div>`
+                : state.reveals[key] && question.answer !== null
+                ? `<div class="answer-note" role="status" aria-live="polite">Answer key: <strong>${String.fromCharCode(65 + question.answer)}</strong>. Revealing does not count toward your score.</div>`
+                : "";
+
+            const englishUnavailable = showEnglish && !hasEnglishForQuestion(question)
+                ? `<div class="inline-note">English translations are not available for this dataset yet, so only Vietnamese text is shown.</div>`
+                : "";
+
+            return `
+                <article class="question-card">
+                    <div class="question-meta">
+                        <span class="meta-chip">Question ${escapeHtml(String(position))} of ${escapeHtml(String(total))}</span>
+                        <span class="meta-chip">Item ${escapeHtml(String(question.number))}</span>
+                        ${question.critical ? '<span class="meta-chip alt">Critical question</span>' : ""}
+                        ${printedBadge}
+                        <span class="meta-chip soft">${escapeHtml(categoryText)}</span>
+                        ${pageBadge}
+                    </div>
+
+                    <div>
+                        <h3 class="question-title">${escapeHtml(titleText)}</h3>
+                        ${titleSupplement ? `<p class="question-subtitle">${escapeHtml(titleSupplement)}</p>` : ""}
+                    </div>
+
+                    ${englishUnavailable}
+                    ${imageMarkup}
+
+                    <div class="options" role="group" aria-label="Answer choices for question ${escapeHtml(String(question.number))}">${optionsMarkup}</div>
+                    <div class="question-actions"><button type="button" class="primary-button" data-action="check" ${revealAnswer || record.selected === undefined || question.answer === null ? "disabled" : ""}>Check answer</button><button type="button" class="ghost-button" data-action="reveal" ${revealAnswer || question.answer === null ? "disabled" : ""}>Reveal answer</button></div>
+                    ${answerNote}
+                </article>
+            `;
+        }
+
+        function handleQuestionAction(event, mode) {
+            const button = event.target.closest("button");
+            if (!button) return;
+            const list = getQuestionList(mode);
+            const index = mode === "single" ? state.currentIndex : mode === "themed" ? state.themedIndex : state.randomIndex;
+            const question = list[index];
+            if (!question) return;
+            const key = answerKey(mode, question);
+            const existing = state.answers[key] || {};
+            if (button.dataset.option !== undefined && !existing.checked) {
+                state.answers[key] = { selected: Number(button.dataset.option), checked: false };
+                saveState();
+                renderQuestionMode(mode);
+                const replacement = elements[`${mode}Content`].querySelector(`[data-option="${button.dataset.option}"]`);
+                replacement?.focus();
+            } else if (button.dataset.action === "check" && !existing.checked && Number.isInteger(existing.selected) && question.answer !== null) {
+                state.answers[key] = { selected: existing.selected, checked: true, correct: existing.selected === question.answer };
+                saveState();
+                renderQuestionMode(mode);
+                elements[`${mode}Content`].querySelector(".answer-note")?.scrollIntoView({ block: "nearest" });
+            } else if (button.dataset.action === "reveal" && question.answer !== null) {
+                state.reveals[key] = true;
+                saveState();
+                renderQuestionMode(mode);
+            }
+            updatePracticeScore();
+        }
+
+        function renderQuestionMode(mode) {
+            if (mode === "single") renderSingle();
+            else if (mode === "themed") renderThemed();
+            else renderRandom();
+            updateNavigationState();
+        }
+
+        function answerKey(mode, question) {
+            return `${mode === "single" && state.reviewWrong ? "review" : mode}:${question.id || question.number}`;
+        }
+
+        function getQuestionList(mode) {
+            if (mode === "themed") return state.themedQuestions;
+            if (mode === "random") return state.randomQuestions;
+            if (!state.reviewWrong) return state.questions;
+            const missed = new Set(Object.entries(state.answers)
+                .filter(([key, record]) => !key.startsWith("review:") && record && record.checked && record.correct === false)
+                .map(([key]) => key.split(":")[1]));
+            return state.questions.filter((question) => missed.has(String(question.id || question.number)));
+        }
+
+        function updatePracticeScore() {
+            const checked = Object.values(state.answers).filter((record) => record && record.checked);
+            const correct = checked.filter((record) => record.correct === true).length;
+            const missed = new Set(Object.entries(state.answers)
+                .filter(([key, record]) => !key.startsWith("review:") && record && record.checked && record.correct === false)
+                .map(([key]) => key.split(":")[1]));
+            elements.practiceScore.textContent = `${correct} correct · ${checked.length} attempted`;
+            elements.missedCount.textContent = String(missed.size);
+            elements.reviewWrong.setAttribute("aria-pressed", String(state.reviewWrong));
+            elements.reviewWrong.firstChild.textContent = state.reviewWrong ? "All questions " : "Review missed ";
+            elements.practiceDetail.textContent = state.reviewWrong ? "Showing questions missed in any study mode." : "Your checked answers are saved on this device.";
+        }
+
+        function languageLabel(vietnamese, english) {
+            const vi = Boolean(elements.toggleVietnamese.checked);
+            const en = Boolean(elements.toggleEnglish.checked);
+            if (vi && en && english) return `${vietnamese} — ${english}`;
+            if (en && !vi) return english || vietnamese;
+            return vietnamese;
+        }
+
+        function dailyTheme() {
+            const now = new Date();
+            const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+            return THEMES[((dayNumber % THEMES.length) + THEMES.length) % THEMES.length];
+        }
+
+        function applyTheme() {
+            const preference = THEMES.includes(state.themePreference) ? state.themePreference : "auto";
+            const theme = preference === "auto" ? dailyTheme() : preference;
+            document.body.dataset.theme = theme;
+            document.body.classList.toggle("cinematic-theme", CINEMATIC_THEMES.has(theme));
+            elements.themeSelect.value = preference;
+            elements.themeDescription.textContent = `${THEME_DESCRIPTIONS[theme]} ${preference === "auto" ? "Changes at local midnight." : "Selected manually."}`;
+        }
+
+        function scheduleThemeRefresh() {
+            const now = new Date();
+            const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+            window.setTimeout(() => { applyTheme(); scheduleThemeRefresh(); }, Math.max(1000, next - now + 100));
+        }
+
+        function restoreState() {
+            try {
+                const currentState = localStorage.getItem(STORAGE_KEY);
+                let saved = JSON.parse(currentState || "{}");
+                if (!currentState) {
+                    const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "{}");
+                    saved = {
+                        themePreference: legacy.themePreference,
+                        showVietnamese: legacy.showVietnamese,
+                        showEnglish: legacy.showEnglish,
+                    };
+                }
+                state.themePreference = THEMES.includes(saved.themePreference) ? saved.themePreference : "auto";
+                state.mode = ["single", "themed", "random", "vocab"].includes(saved.mode) ? saved.mode : "single";
+                state.showVietnamese = saved.showVietnamese !== false;
+                state.showEnglish = saved.showEnglish === true;
+                state.currentIndex = Number.isInteger(saved.currentIndex) ? saved.currentIndex : 0;
+                state.themedIndex = Number.isInteger(saved.themedIndex) ? saved.themedIndex : 0;
+                state.randomIndex = Number.isInteger(saved.randomIndex) ? saved.randomIndex : 0;
+                state.savedRandomIds = Array.isArray(saved.randomIds) ? saved.randomIds : [];
+                state.selectedCategory = typeof saved.selectedCategory === "string" ? saved.selectedCategory : "";
+                state.vocabCategory = typeof saved.vocabCategory === "string" ? saved.vocabCategory : "All Terms";
+                state.vocabDirection = saved.vocabDirection === "en-vi" ? "en-vi" : "vi-en";
+                state.savedVocabSession = saved.vocabSession && typeof saved.vocabSession === "object"
+                    && !Array.isArray(saved.vocabSession) ? saved.vocabSession : null;
+                state.reviewWrong = saved.reviewWrong === true;
+                state.answers = saved.answers && typeof saved.answers === "object" && !Array.isArray(saved.answers) ? saved.answers : {};
+                state.reveals = saved.reveals && typeof saved.reveals === "object" && !Array.isArray(saved.reveals) ? saved.reveals : {};
+                elements.randomCount.value = String(Number(saved.randomCount) || 20);
+            } catch (error) {
+                state.answers = {};
+                state.reveals = {};
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    themePreference: state.themePreference,
+                    mode: state.mode,
+                    showVietnamese: elements.toggleVietnamese.checked,
+                    showEnglish: elements.toggleEnglish.checked,
+                    currentIndex: state.currentIndex,
+                    themedIndex: state.themedIndex,
+                    randomIndex: state.randomIndex,
+                    randomIds: state.randomQuestions.map((question) => question.id || question.number),
+                    selectedCategory: state.selectedCategory,
+                    randomCount: elements.randomCount.value,
+                    vocabCategory: state.vocabCategory,
+                    vocabDirection: state.vocabDirection,
+                    vocabSession: {
+                        category: state.vocabCategory,
+                        direction: state.vocabDirection,
+                        keys: state.vocabDeck.map((entry) => entry.key),
+                        index: state.vocabIndex,
+                        correct: state.vocabCorrect,
+                        attempts: state.vocabAttempts,
+                        streak: state.vocabStreak,
+                        bestStreak: state.vocabBestStreak,
+                        locked: state.vocabLocked,
+                        feedbackKind: state.vocabFeedback?.kind || null,
+                    },
+                    reviewWrong: state.reviewWrong,
+                    answers: state.answers,
+                    reveals: state.reveals,
+                }));
+            } catch (error) { /* Local storage may be unavailable in private browsing. */ }
+        }
+
+        function wireVocabularyCard() {
+            const form = document.getElementById("vocab-form");
+            const input = document.getElementById("vocab-answer");
+            const revealButton = document.getElementById("vocab-reveal");
+            const nextButton = document.getElementById("vocab-next");
+
+            if (!form || !input || !nextButton) {
+                return;
+            }
+
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                if (state.vocabLocked) {
+                    advanceVocabularyCard();
+                    return;
+                }
+                checkVocabularyAnswer(input.value);
+            });
+
+            if (revealButton) {
+                revealButton.addEventListener("click", revealVocabularyAnswer);
+            }
+
+            nextButton.addEventListener("click", advanceVocabularyCard);
+
+            if (!state.vocabLocked && state.mode === "vocab") {
+                input.focus();
+            }
+        }
+
+        function checkVocabularyAnswer(rawInput) {
+            const entry = state.vocabDeck[state.vocabIndex];
+            if (!entry) {
+                return;
+            }
+
+            const userInput = squashWhitespace(rawInput);
+            if (!userInput) {
+                state.vocabFeedback = vocabularyFeedback("empty");
+                saveState();
+                renderVocabulary();
+                return;
+            }
+
+            const correct = isVocabularyAnswerCorrect(entry, userInput);
+
+            state.vocabAttempts += 1;
+            state.vocabLocked = true;
+
+            if (correct) {
+                state.vocabCorrect += 1;
+                state.vocabStreak += 1;
+                state.vocabBestStreak = Math.max(state.vocabBestStreak, state.vocabStreak);
+                state.vocabFeedback = vocabularyFeedback("correct");
+            } else {
+                state.vocabStreak = 0;
+                state.vocabFeedback = vocabularyFeedback("wrong");
+            }
+
+            saveState();
+            renderVocabulary();
+        }
+
+        function revealVocabularyAnswer() {
+            const entry = state.vocabDeck[state.vocabIndex];
+            if (!entry) {
+                return;
+            }
+
+            state.vocabStreak = 0;
+            state.vocabLocked = true;
+            state.vocabFeedback = vocabularyFeedback("revealed");
+            saveState();
+            renderVocabulary();
+        }
+
+        function advanceVocabularyCard() {
+            if (!state.vocabDeck.length) {
+                return;
+            }
+
+            if (!state.vocabLocked) {
+                state.vocabStreak = 0;
+            }
+            state.vocabIndex = (state.vocabIndex + 1) % state.vocabDeck.length;
+            resetVocabularyCardState();
+            saveState();
+            renderVocabulary();
+        }
+
+        function vocabularyFeedback(kind) {
+            if (!kind) return null;
+            if (kind === "empty") {
+                return { kind, type: "is-info", message: "Type an answer before checking the card." };
+            }
+            const entry = state.vocabDeck[state.vocabIndex];
+            if (!entry) return null;
+            const accepted = getVocabularyAnswers(entry, state.vocabDirection)
+                .map((answer) => `<strong>${escapeHtml(answer)}</strong>`)
+                .join(" / ");
+            if (kind === "correct") return { kind, type: "is-success", message: `Correct. Accepted answer: ${accepted}.` };
+            if (kind === "wrong") return { kind, type: "is-error", message: `Not quite. Accepted answer: ${accepted}.` };
+            if (kind === "revealed") return { kind, type: "is-info", message: `Answer revealed: ${accepted}.` };
+            return null;
+        }
+
+        function getVocabularyAnswers(entry, direction) {
+            if (direction === "vi-en") {
+                return [entry.english, ...entry.englishAlternatives].filter(Boolean);
+            }
+            return [entry.vietnamese, ...entry.vietnameseAlternatives].filter(Boolean);
+        }
+
+        function isVocabularyAnswerCorrect(entry, userInput) {
+            const acceptedAnswers = getVocabularyAnswers(entry, state.vocabDirection);
+            const normalizedUser = state.vocabDirection === "vi-en"
+                ? normalizeEnglishAnswer(userInput)
+                : normalizeVietnameseAnswer(userInput);
+
+            return acceptedAnswers.some((answer) => {
+                const normalizedAnswer = state.vocabDirection === "vi-en"
+                    ? normalizeEnglishAnswer(answer)
+                    : normalizeVietnameseAnswer(answer);
+                return normalizedAnswer === normalizedUser;
+            });
+        }
+
+        function updateNavigationState() {
+            const singleList = getQuestionList("single");
+            const hasSingle = singleList.length > 0;
+            const hasThemed = state.themedQuestions.length > 0;
+            const hasRandom = state.randomQuestions.length > 0;
+
+            elements.singlePrev.disabled = !hasSingle || state.currentIndex === 0;
+            elements.singleNext.disabled = !hasSingle || state.currentIndex >= singleList.length - 1;
+            elements.themedPrev.disabled = !hasThemed || state.themedIndex === 0;
+            elements.themedNext.disabled = !hasThemed || state.themedIndex >= state.themedQuestions.length - 1;
+            elements.randomPrev.disabled = !hasRandom || state.randomIndex === 0;
+            elements.randomNext.disabled = !hasRandom || state.randomIndex >= state.randomQuestions.length - 1;
+            elements.themedStart.disabled = state.questions.length === 0;
+            elements.randomStart.disabled = state.questions.length === 0;
+        }
+
+        function questionHasEnglish(question) {
+            return Boolean(
+                (question.category_english && question.category_english.trim()) ||
+                (question.english && question.english.trim()) ||
+                question.options.some((option) => option.english && option.english.trim())
+            );
+        }
+
+        function hasEnglishForQuestion(question) {
+            return Boolean(
+                (question.category_english && question.category_english.trim()) ||
+                (question.english && question.english.trim()) ||
+                question.options.some((option) => option.english && option.english.trim())
+            );
+        }
+
+        function pickLanguageText(vietnamese, english, showVietnamese, showEnglish) {
+            if (showEnglish && !showVietnamese) {
+                return english || vietnamese;
+            }
+            return vietnamese;
+        }
+
+        function normalizeEnglishAnswer(text) {
+            return squashWhitespace(String(text).toLowerCase())
+                .replace(/[.,/#!$%^&*;:{}=\-_`~()'"?]/g, " ")
+                .replace(/\b(a|an|the)\b/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function normalizeVietnameseAnswer(text) {
+            return squashWhitespace(stripDiacritics(String(text).toLowerCase()))
+                .replace(/[.,/#!$%^&*;:{}=\-_`~()'"?]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function stripDiacritics(text) {
+            return text
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d")
+                .replace(/Đ/g, "D");
+        }
+
+        function setStatus(message, type) {
+            elements.status.textContent = message;
+            elements.status.className = `status-banner status-${type}`;
+        }
+
+        function squashWhitespace(text) {
+            return String(text).replace(/\s+/g, " ").trim();
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+    </script>
+</body>
+</html>

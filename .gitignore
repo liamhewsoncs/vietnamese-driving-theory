@@ -1,0 +1,20 @@
+# Local source material; download it from the official publisher when rebuilding.
+source/*.pdf
+
+# Generated vocabulary exports and optional download bundles.
+*.apkg
+*.tsv
+*.zip
+
+# Python and editor leftovers.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+.vscode/
+.idea/
+translation_failures.json
+Thumbs.db
+.DS_Store
