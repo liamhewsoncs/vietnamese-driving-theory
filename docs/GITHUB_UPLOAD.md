@@ -1,23 +1,23 @@
-# Put Lái Lab on GitHub
+# Put Vietnamese Driving Theory Test on GitHub
 
-The folder `lai-lab-vietnamese-driving-theory` is the repository root. Run Git commands **inside this folder**, not in the surrounding VDT folder. The project name contains no spaces, but the parent path does, so keep the path in quotes.
+The folder `vietnamese-driving-theory` is the repository root. Run Git commands **inside this folder**, not in the surrounding VDT folder. The project name contains no spaces, but the parent path does, so keep the path in quotes.
 
 ## 1. Create an empty repository
 
-Sign in to GitHub and open <https://github.com/new>. Name the repository `lai-lab-vietnamese-driving-theory` (or another name you prefer). Choose Public if you want everyone to access the quiz. Leave **Add a README**, **Add .gitignore**, and **Choose a license** unselected; these files are already present or require a separate licensing decision. Create the repository and copy its HTTPS URL.
+Sign in to GitHub and open <https://github.com/new>. Name the repository `vietnamese-driving-theory`. Choose Public if you want everyone to access the quiz. Leave **Add a README**, **Add .gitignore**, and **Choose a license** unselected; these files are already present or require a separate licensing decision. Create the repository and copy its HTTPS URL.
 
 ## 2. Push the project
 
 Open PowerShell and run these commands one at a time:
 
 ```powershell
-cd "C:\Users\liamh\OneDrive\Desktop\Ai folders\VDT\lai-lab-vietnamese-driving-theory"
+cd "C:\Users\liamh\OneDrive\Desktop\Ai folders\VDT\vietnamese-driving-theory"
 git init
 git add .
 git status
-git commit -m "Initial Lái Lab release"
+git commit -m "Initial Vietnamese Driving Theory Test release"
 git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/lai-lab-vietnamese-driving-theory.git
+git remote add origin https://github.com/YOUR-USERNAME/vietnamese-driving-theory.git
 git push -u origin main
 ```
 
@@ -29,6 +29,6 @@ In the GitHub repository, open **Settings → Pages**. Under **Build and deploym
 
 ## 4. Offer the ZIP download
 
-The `Lai-Lab-v1.0.0.zip` file is in the surrounding `VDT` folder, **outside** this Git repository. On the repository page, open **Releases → Create a new release**. Choose a new tag `v1.0.0`, enter `Lái Lab v1.0.0` as the title, and attach `C:\Users\liamh\OneDrive\Desktop\Ai folders\VDT\Lai-Lab-v1.0.0.zip`. Wait for the upload to finish, then publish the release. People can download and extract the ZIP to run the quiz offline. Keep the ZIP out of the Git repository; releases hold downloadable packages.
+The `Vietnamese-Driving-Theory-Test-v1.0.0.zip` file is in the surrounding `VDT` folder, **outside** this Git repository. On the repository page, open **Releases → Create a new release**. Choose a new tag `v1.0.0`, enter `Vietnamese Driving Theory Test v1.0.0` as the title, and attach `C:\Users\liamh\OneDrive\Desktop\Ai folders\VDT\Vietnamese-Driving-Theory-Test-v1.0.0.zip`. Wait for the upload to finish, then publish the release. People can download and extract the ZIP to run the quiz offline. Keep the ZIP out of the Git repository; releases hold downloadable packages.
 
 GitHub's current help pages: [adding local code](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github), [publishing from a branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), and [managing releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository).

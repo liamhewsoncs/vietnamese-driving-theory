@@ -1,5 +1,5 @@
-LÁI LAB — OFFLINE QUIZ
-======================
+VIETNAMESE DRIVING THEORY TEST — OFFLINE QUIZ
+==============================================
 
 HOW TO START
 
@@ -12,7 +12,8 @@ preferences are saved in that browser's local storage.
 
 IMPORTANT ACCURACY NOTICE
 
-Lái Lab is an independent study aid, not an official Vietnamese licensing app.
+Vietnamese Driving Theory Test is an independent study aid, not an official
+Vietnamese licensing app.
 Its questions are based on the 2025 Cục Cảnh sát giao thông (CSGT) 600-question
 driving-theory bank. Many English strings began as machine translations and
 have not received expert legal or technical review. Always compare wording,

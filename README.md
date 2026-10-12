@@ -1,6 +1,6 @@
-# Lái Lab — Vietnamese Driving Theory Quiz
+# Vietnamese Driving Theory Test
 
-Lái Lab is an offline-friendly, bilingual study quiz based on the 2025
+Vietnamese Driving Theory Test is an offline-friendly, bilingual study quiz based on the 2025
 Vietnamese 600-question driving theory bank. It runs entirely in a web browser:
 no account, installation, server, or internet connection is required.
 
@@ -17,7 +17,7 @@ answers and preferences are stored locally in your browser.
 ### Download for offline use
 
 1. Open this repository's **Releases** page.
-2. Download `Lai-Lab-v1.0.0.zip` from the latest release.
+2. Download `Vietnamese-Driving-Theory-Test-v1.0.0.zip` from the latest release.
 3. Extract the entire ZIP file.
 4. Open `index.html` in a modern web browser.
 
@@ -43,14 +43,14 @@ choices.
 
 ## Privacy
 
-Lái Lab has no user account, analytics, advertising, or cloud database. Quiz
+Vietnamese Driving Theory Test has no user account, analytics, advertising, or cloud database. Quiz
 progress and preferences are saved using the browser's local storage. Clearing
 browser data, using private browsing, or switching browsers or devices may
 reset that progress.
 
 ## Accuracy and official source
 
-Lái Lab is an independent study aid, **not an official licensing application**.
+Vietnamese Driving Theory Test is an independent study aid, **not an official licensing application**.
 The Vietnamese content is based on the 2025 question bank published by the
 Cục Cảnh sát giao thông (CSGT).
 
